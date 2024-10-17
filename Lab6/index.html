@@ -74,6 +74,25 @@ map.on('load',function(){
   })
 });
 
+map.on('load',function(){
+  // Give your layer's source a nickname you'll remember easily. I've called my source `sandy_layer`.
+  map.addSource('nyc_housing',{
+    'type':'vector',
+    'url': 'mapbox://shahdjuwhari.apbob8s5'
+  });
+  // add a new layer with your polygons
+  map.addLayer({
+    'id':'housing',
+    'type':'fill',
+    'source':'nyc_housing',
+    'source-layer':'NYCHA_Public_Housing_Developm-09cecs',
+    'paint':{
+      'fill-color':'#FF0000',
+      'fill-opacity': 0.5
+    }
+  })
+});
+
 // Within a script, you comment using two backslashes.
 </script>
 

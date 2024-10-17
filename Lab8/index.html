@@ -1,0 +1,292 @@
+<!-- This is to indicate we have an HTML document -->
+<!DOCTYPE html>
+
+<!-- All our code goes within this tag-->
+<html>
+
+<!-- All the metadata and packages/tools we'll use go in here-->
+<head>
+
+<!-- The charset attribute specifies the character encoding for the HTML document.-->
+<meta charset="utf-8" />
+
+<!-- The title of your page, which will appear in the browser tab -->
+<title>NYC Housing Flood Risk</title>
+
+<!-- The size of the viewport vs the rendered page -->
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+
+<!-- We are going to call the Mapbox GL javascript library, which will allow us to use its functionality -->
+<script src='https://api.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.js'></script>
+
+<!-- Alongside this, we are going to bring in the Mapbox GL stylesheet -->
+<link href='https://api.mapbox.com/mapbox-gl-js/v2.9.2/mapbox-gl.css' rel='stylesheet' />
+
+<link href='style.css' rel='stylesheet' />
+
+<!-- This allows us to bring in new fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Montserrat&display=swap" rel="stylesheet">
+</head>
+
+<!-- The body contains the actual content of a page -->
+<body>
+
+<!-- The "div" tag delineates a "division" or section of the HTML page.-->
+  <div id="map"></div>
+  <div class="map-overlay">
+  <div class="map-overlay-inner">
+  <h2>Public and Affordable Housing Flood Risk</h2>
+  <p>In the fall of 2012, New York City was hit with hurricane that left tens of thousands of public housing residents <a href = "https://www1.nyc.gov/site/nycha/about/press/pr-2012/nycha-has-restored-power-to-buildings-affected-by-hurricane-sandy.page">without power for days or even weeks]</a>. New York City Housing Authority public housing developments were affected. <a href="https://furmancenter.org/files/publications/SandysEffectsOnHousingInNYC.pdf">24,000 government-subsidized apartments and 40,000 rent-stabilized apartments were also affected</a>.</p>
+
+  <p>With rising sea levels from climate change and the <a href="https://www.nytimes.com/2017/04/18/magazine/when-rising-seas-transform-risk-into-certainty.html">promise</a> of more flooding, which areas and <i>who</i> will likely be most affected? How is affordable housing construction responding to this? </p>
+
+<div id='menu'>
+  <label class='check-container'>
+      Sandy Inundation Zone
+      <input id='floodZones' type='checkbox' name='viz-toggle' checked='checked'>
+    </label>
+  <label class='check-container'>
+      NYCHA Buildings
+      <input id='nychaBuildings' type='checkbox' name='viz-toggle' checked='checked'>
+  </label>
+  <label class='check-container'>
+      +300 People Below Poverty Line
+      <input id='povertyLevel' type='checkbox' name='viz-toggle' checked='checked'>
+  </label>
+
+    <input type="checkbox" id="floodplain-2020-100yr" checked>
+    <label for="floodplain-2020-100yr">2020 Predicted Floodplains (1 in 100 year flood)</label>
+    <br>
+    <input type="checkbox" id="floodplain-2020-500yr" checked>
+    <label for="floodplain-2020-500yr">2020 Predicted Floodplains (1 in 500 year flood)</label>
+    <br>
+    <input type="checkbox" id="floodplain-2050-100yr" checked>
+    <label for="floodplain-2050-100yr">2050 Predicted Floodplains (1 in 100 year flood)</label>
+    <br>
+    <input type="checkbox" id="floodplain-2050-500yr" checked>
+    <label for="floodplain-2050-500yr">2050 Predicted Floodplains (1 in 500 year flood)</label>
+    <br>
+    <input type="checkbox" id="floodplain-2100-100yr" checked>
+    <label for="floodplain-2100-100yr">2100 Predicted Floodplains (1 in 100 year flood)</label>
+    <br>
+    <input type="checkbox" id="floodplain-2100-500yr" checked>
+    <label for="floodplain-2100-500yr">2100 Predicted Floodplains (1 in 500 year flood)</label>
+</div>
+
+  <script>
+  // You'll be inserting your JS code to initialize your map here
+  mapboxgl.accessToken = 'pk.eyJ1Ijoic2hhaGRqdXdoYXJpIiwiYSI6ImNtMXRoeW1rMDAyZnUybHBybHdmYnRuNDEifQ.Jw0kIKtdpRrRzCfucPlsgw';
+  const map = new mapboxgl.Map({
+    container: 'map', // container id
+    style: 'mapbox://styles/shahdjuwhari/cm1y3nkd800pm01pgfvp5aptx', // replace this with your style URL
+    center: [-73.935242, 40.730610], // The convention for coordinates is  typically [long, lat]
+    zoom: 13,
+    // maxZoom: 22,
+    // minZoom: 12
+  });
+
+  map.on('load',function(){
+    // Give your layer's source a nickname you'll remember easily.
+    map.addSource('sandyLayer',{
+      'type':'vector',
+      'url': 'mapbox://shahdjuwhari.5viih31y'
+    });
+
+    map.addSource('nychaLayer',{
+      'type':'vector',
+      'url': 'mapbox://shahdjuwhari.apbob8s5'
+    });
+
+    // add a new layer with your polygons
+   
+    map.addSource('censusLayer',{
+      'type':'vector',
+      'url': 'mapbox://iamwfx.6nowkujs'
+    });
+
+        map.addLayer({
+      'id':'povertyLevel',
+      'type':'fill',
+      'source':'censusLayer',
+      'source-layer':'nyc_blck_grp_2020_wcensus_dro-4db43i',
+      'paint':{
+        'fill-color':[
+      'case',
+      ['>=', ['get', 'AMR5E002'], 300], '#f5ef42',  // Color for values >= 300
+      [
+        'step',
+        ['get', 'AMR5E002'],  // Replace 'AMR5E002' with the correct property
+        '#edf8e9', 200,
+        '#bae4b3', 400,
+        '#74c476', 600,
+        '#31a354', 800,
+        '#006d2c'
+      ]
+    ],
+        'fill-opacity': [
+      'case',
+      ['<', ['get', 'AMR5E002'], 300], 0,  // Set opacity to 0 if value < 300
+      1  // Set opacity to 1 for values 300 and above
+    ]
+  }
+});
+    map.addLayer({
+      'id':'floodZones',
+    })
+
+    map.addLayer({
+      'id':'nychaBuildings',
+      'type':'fill',
+      'source':'nychaLayer',
+      'source-layer':'NYCHA_Public_Housing_Developm-09cecs',
+      'paint':{
+        'fill-color':'red',
+        'fill-opacity': 0.5
+      }
+    })
+
+    map.addLayer({
+      'id':'floodZones',
+      'type':'fill',
+      'source':'sandyLayer',
+      'source-layer':'geo_export_04d8473e-fc93-45e1-68kbay',
+      'paint':{
+        'fill-color':'#00158f',
+        'fill-opacity': 0.5
+      }
+    });
+    map.setLayoutProperty('floodZones', "visibility", "visible");
+    map.setLayoutProperty('povertyLevel', "visibility", "visible");
+    map.setLayoutProperty('nychaBuildings', "visibility", "visible");
+map.on('load', function() {
+    // Set initial visibility for existing layers
+    
+    // Attach the switchLayer function to all checkboxes
+    for (var i = 0; i < checkboxes.length; i++) {
+        checkboxes[i].onclick = switchLayer;
+    }
+
+    // Attach the switchLayer function to new floodplain layer checkboxes
+    const floodplainCheckboxes = [
+        'floodplain-2020-100yr',
+        'floodplain-2020-500yr',
+        'floodplain-2050-100yr',
+        'floodplain-2050-500yr',
+        'floodplain-2100-100yr',
+        'floodplain-2100-500yr'
+    ];
+
+    floodplainCheckboxes.forEach(function (id) {
+        const checkbox = document.getElementById(id);
+        checkbox.onclick = switchLayer;
+    });
+});
+
+    // Step 3: Add floodplain sources and layers
+const floodplainLayers = [
+    {
+        id: 'floodplain-2020-100yr',
+        source: 'mapbox://iamwfx.bbchggzx',
+        layer: 'FutureFloodplains_2020_100yr-du18hr',
+        paint: {
+            'fill-color': 'rgba(255, 0, 0, 0.5)', // Example color with transparency
+            'fill-opacity': 0.5
+        }
+    },
+    {
+        id: 'floodplain-2020-500yr',
+        source: 'mapbox://iamwfx.05ogder8',
+        layer: 'FutureFloodplains_2020_500yr-0x77x0',
+        paint: {
+            'fill-color': 'rgba(255, 165, 0, 0.5)', // Example color with transparency
+            'fill-opacity': 0.5
+        }
+    },
+    {
+        id: 'floodplain-2050-100yr',
+        source: 'mapbox://iamwfx.crrx4301',
+        layer: 'FutureFloodplains_2050_100yr-6nepei',
+        paint: {
+            'fill-color': 'rgba(0, 255, 0, 0.5)', // Example color with transparency
+            'fill-opacity': 0.5
+        }
+    },
+    {
+        id: 'floodplain-2050-500yr',
+        source: 'mapbox://iamwfx.4ydk0450',
+        layer: 'FutureFloodplains_2050_500yr-a4444h',
+        paint: {
+            'fill-color': 'rgba(0, 0, 255, 0.5)', // Example color with transparency
+            'fill-opacity': 0.5
+        }
+    },
+    {
+        id: 'floodplain-2100-100yr',
+        source: 'mapbox://iamwfx.dxjuiivg',
+        layer: 'FutureFloodplains_2100_100yr-cqwfrw',
+        paint: {
+            'fill-color': 'rgba(128, 0, 128, 0.5)', // Example color with transparency
+            'fill-opacity': 0.5
+        }
+    },
+    {
+        id: 'floodplain-2100-500yr',
+        source: 'mapbox://iamwfx.8thgevrt',
+        layer: 'FutureFloodplains_2100_500yr-27ghpw',
+        paint: {
+            'fill-color': 'rgba(255, 20, 147, 0.5)', // Example color with transparency
+            'fill-opacity': 0.5
+        }
+    }
+];
+
+// Loop through the floodplainLayers array to add each layer
+floodplainLayers.forEach(function(layer) {
+    // Add the source
+    map.addSource(layer.id, {
+        type: 'vector',
+        url: layer.source
+    });
+
+    // Add the layer with specified styling
+    map.addLayer({
+        'id': layer.id,
+        'type': 'fill',
+        'source': layer.id,
+        'source-layer': layer.layer,
+        'layout': {},
+        'paint': layer.paint
+    });
+});
+
+
+var layerList = document.getElementById("menu");
+var checkboxes = layerList.getElementsByTagName("input");
+
+function switchLayer(layer) {
+    var clickedLayersLabel = layer.target.id; // get the label of the layer cluster
+    var isChecked = layer.target.checked; // check if the checkbox is checked
+
+    // Set the layer visibility based on the checkbox state
+    if (isChecked) {
+        map.setLayoutProperty(clickedLayersLabel, "visibility", "visible");
+    } else {
+        map.setLayoutProperty(clickedLayersLabel, "visibility", "none");
+    }
+}
+
+// Attach the switchLayer function to all checkboxes
+for (var i = 0; i < checkboxes.length; i++) {
+    checkboxes[i].onclick = switchLayer;
+}
+
+
+});
+
+
+
+  // Within a script, you comment using two backslashes.
+  </script>
+</body>
+
+</html>
